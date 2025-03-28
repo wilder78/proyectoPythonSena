@@ -1,6 +1,4 @@
 from django.db import models
-from django.contrib.contenttypes.fields import GenericForeignKey
-from django.contrib.contenttypes.models import ContentType
 from django.utils import timezone
 
 
@@ -28,9 +26,6 @@ class MechanicalWatch(Watch):
     WINDING_CHOICES = [("manual", "Manual"), ("automatic", "Automático")]
     winding_type = models.CharField(max_length=10, choices=WINDING_CHOICES, default="manual")
 
-    def winding_verification(self):
-        return f"El reloj {self.brand} {self.model} tiene un mecanismo de cuerda {self.winding_type}."
-
     def general_maintenance(self):
         return f"Se ha realizado calibración ({self.winding_type}), limpieza y lubricación en el reloj {self.brand} {self.model} ({self.type_of_machinery})."
 
@@ -42,6 +37,18 @@ class QuartzWatch(Watch):
         return f"Se ha realizado limpieza y cambio de batería en el reloj {self.brand} {self.model} ({self.type_of_machinery})."
 
 
+class SmartWatch(Watch):
+    os = models.CharField(max_length=50, default="Desconocido")  # Sistema operativo
+    connectivity = models.CharField(max_length=100, default="No especificado")  # Tipos de conectividad
+
+    def general_maintenance(self):
+        return f"Se ha realizado actualización de software y revisión de sensores en el reloj {self.brand} {self.model} ({self.type_of_machinery})."
+
+    class Meta:
+        verbose_name = "Reloj Inteligente"
+        verbose_name_plural = "Relojes Inteligentes"
+
+
 # ========================/ Base models for person. /========================= #
 class Person(models.Model):
     name = models.CharField(max_length=100)
@@ -51,42 +58,37 @@ class Person(models.Model):
     class Meta:
         abstract = True
 
-    def get_role_info(self):
-        return f"Identidad: {self.name} - ID: {self.identification} - Teléfono: {self.phone}"
-
     def __str__(self):
-        return self.get_role_info()
+        return f"{self.name} - ID: {self.identification} - Tel: {self.phone}"
 
 
 # ===========================/ Clases hijas de Person /=========================== #
 class Customer(Person):
     email = models.EmailField(unique=True)
 
-    def get_role_info(self):
-        return f"Cliente: {self.name} - Email: {self.email} - Tel: {self.phone}"
-
 
 class Employee(Person):
     post = models.CharField(max_length=50)
     salary = models.DecimalField(max_digits=10, decimal_places=2)
-
-    def get_role_info(self):
-        return f"Empleado: {self.name} - Cargo: {self.post} - Salario: ${self.salary}"
 
 
 class Supplier(Person):
     company = models.CharField(max_length=100)
     products = models.TextField()
 
-    def get_role_info(self):
-        return f"Proveedor: {self.name} - Empresa: {self.company} - Productos: {self.products}"
 
-
-# ========================/ Base models for person. /========================= #
+# ========================/ Modelo de Servicios corregido /========================= #
 class Service(models.Model):
-    watch_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
-    watch_id = models.PositiveBigIntegerField()
-    watch = GenericForeignKey('watch_type', 'watch_id')
+    WATCH_CHOICES = [
+        ("MechanicalWatch", "Reloj Mecánico"),
+        ("QuartzWatch", "Reloj de Cuarzo"),
+        ("SmartWatch", "Reloj Inteligente"),
+    ]
+    
+    watch_type = models.CharField(max_length=20, choices=WATCH_CHOICES)
+    mechanical_watch = models.ForeignKey(MechanicalWatch, on_delete=models.SET_NULL, null=True, blank=True)
+    quartz_watch = models.ForeignKey(QuartzWatch, on_delete=models.SET_NULL, null=True, blank=True)
+    smart_watch = models.ForeignKey(SmartWatch, on_delete=models.SET_NULL, null=True, blank=True)
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
     service_type = models.CharField(max_length=100)
     status = models.CharField(max_length=50, default="Pendiente")
@@ -101,19 +103,8 @@ class Service(models.Model):
         self.delivery_date = timezone.localdate()
         self.save()
 
-    @classmethod
-    def create_pending_service(cls, watch, customer, service_type, cost=0, observations=""):
-        """
-        Crea un nuevo servicio con estado "Pendiente".
-        """
-        return cls.objects.create(
-            watch_type=ContentType.objects.get_for_model(watch),
-            watch_id=watch.id,
-            customer=customer,
-            service_type=service_type,
-            cost=cost,
-            observations=observations
-        )
+    def __str__(self):
+        return f"Servicio: {self.service_type} - Estado: {self.status} - Cliente: {self.customer.name}"
 
 
 

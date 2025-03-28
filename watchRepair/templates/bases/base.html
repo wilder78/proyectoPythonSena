@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 
@@ -17,7 +18,9 @@
         integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
 
     <!-- Link to the proyect's CSS file --//-- Enlace al archivo CSS del proyecto -->
-    <link rel="stylesheet" href="../../static/css/styles.css">
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+
+
 </head>
 
 <body>

@@ -4,12 +4,24 @@ from django.utils import timezone
 
 # ========================/ Base models for watches. /========================= #
 class Watch(models.Model):
-    brand = models.CharField(max_length=100)
-    type_of_machinery = models.CharField(max_length=50)
-    model = models.CharField(max_length=100)
+    _Brand = models.CharField(max_length=100)
+    _Type_of_machinery = models.CharField(max_length=50)
+    _Model = models.CharField(max_length=100)
 
     class Meta:
         abstract = True  # Modelo abstracto para evitar crear tabla en la BD
+
+    @property
+    def brand(self):
+        return self._Brand
+    
+    @property
+    def type_of_machinery(self):
+        return self._Type_of_machinery
+    
+    @property
+    def model(self):
+        return self._Model
 
     def general_maintenance(self):
         return f"Mantenimiento general realizado en el reloj {self.brand} {self.model} ({self.type_of_machinery})."

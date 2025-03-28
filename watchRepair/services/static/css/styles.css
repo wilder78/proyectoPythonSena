@@ -1,0 +1,18 @@
+/* Body of the page. --//-- Cuerpo de la página. */
+body {
+    margin: 0;
+    padding: 0;
+    background-color: rgb(237, 237, 237);
+    height: 100vh;
+}
+
+
+/* Navigation bar navbar. --//-- Barra de navegación navbar. */
+.navbar {
+    background-color: rgb(212, 175, 55);
+    
+}
+
+.navbar-collapse {
+    justify-content: flex-end;
+}
